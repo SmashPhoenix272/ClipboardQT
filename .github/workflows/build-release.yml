@@ -27,15 +27,7 @@ jobs:
         
     - name: Create PyInstaller Spec
       run: |
-        pyi-makespec --onefile --windowed --icon=icon.ico --name ClipboardQT ^
-          --hidden-import=win32gui ^
-          --hidden-import=win32con ^
-          --hidden-import=ctypes ^
-          --hidden-import=PyQt5 ^
-          --hidden-import=PyQt5.QtCore ^
-          --hidden-import=PyQt5.QtGui ^
-          --hidden-import=PyQt5.QtWidgets ^
-          ClipboardQT.py
+        pyi-makespec --onefile --windowed --icon=icon.ico --name ClipboardQT --hidden-import=win32gui --hidden-import=win32con --hidden-import=ctypes --hidden-import=PyQt5 --hidden-import=PyQt5.QtCore --hidden-import=PyQt5.QtGui --hidden-import=PyQt5.QtWidgets ClipboardQT.py
           
     - name: Build with PyInstaller
       run: |
