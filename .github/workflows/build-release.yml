@@ -17,6 +17,11 @@ jobs:
       with:
         python-version: '3.11'
         
+    - name: Install MinGW
+      run: |
+        choco install mingw -y
+        refreshenv
+        
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -26,6 +31,7 @@ jobs:
         
     - name: Build with Nuitka
       run: |
+        $env:PATH = "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin;$env:PATH"
         python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
         
     - name: Create Release
