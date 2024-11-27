@@ -1,5 +1,5 @@
 # ClipboardQT
-
+![alt text](app.png)
 ## Overview
 A PyQt5 application that monitors clipboard, sends text to a QTBatch translation server, and displays translated results.
 
