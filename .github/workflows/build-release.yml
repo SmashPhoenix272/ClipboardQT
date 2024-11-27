@@ -25,14 +25,13 @@ jobs:
         pip install zstandard  # Required for Nuitka
         pip install ordered-set  # Required for Nuitka
         pip install requests  # For downloading MinGW
-        pip install py7zr  # For extracting MinGW
         
     - name: Setup MinGW
       shell: python
       run: |
         import os
         import requests
-        import py7zr
+        import subprocess
         from pathlib import Path
         
         # Create Nuitka cache directory
@@ -46,9 +45,9 @@ jobs:
         mingw_file.write_bytes(response.content)
         print("MinGW downloaded successfully")
         
-        # Extract MinGW
-        with py7zr.SevenZipFile(mingw_file, mode='r') as z:
-            z.extractall(cache_dir)
+        # Extract MinGW using 7-Zip
+        seven_zip = r"C:\Program Files\7-Zip\7z.exe"
+        subprocess.run([seven_zip, "x", str(mingw_file), f"-o{str(cache_dir)}", "-y"], check=True)
         print("MinGW extracted successfully")
         
     - name: Build with Nuitka
