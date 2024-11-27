@@ -1,0 +1,7 @@
+ClipboardQT.exe
+*.pyc
+__pycache__/
+ClipboardQT.onefile-build/
+ClipboardQT.dist/
+ClipboardQT.build/
+.pytest_cache/
