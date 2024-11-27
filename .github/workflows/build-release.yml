@@ -25,12 +25,14 @@ jobs:
         pip install zstandard  # Required for Nuitka
         pip install ordered-set  # Required for Nuitka
         
+    - name: Create Auto-Response Script
+      run: |
+        echo "import sys; print('yes'); sys.stdout.flush()" > auto_response.py
+        
     - name: Build with Nuitka
       shell: powershell
-      env:
-        NUITKA_DOWNLOAD_CONFIRMATION: "yes"
       run: |
-        python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
+        python auto_response.py | python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
         
     - name: Create Release
       id: create_release
