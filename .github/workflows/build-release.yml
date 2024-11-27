@@ -40,14 +40,38 @@ jobs:
         
         # Download MinGW
         url = "https://github.com/Nuitka/Nuitka-MinGW64-Builds/releases/download/14.2.0posix-19.1.1-12.0.0-msvcrt-r2/gcc-14.2.0posix-19.1.1-12.0.0-msvcrt-r2.7z"
-        response = requests.get(url)
+        print(f"Downloading from: {url}")
+        response = requests.get(url, stream=True)
+        response.raise_for_status()  # Raise an error for bad status codes
+        
         mingw_file = cache_dir / "gcc.7z"
-        mingw_file.write_bytes(response.content)
+        total_size = int(response.headers.get('content-length', 0))
+        print(f"Expected file size: {total_size} bytes")
+        
+        with open(mingw_file, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        
+        actual_size = mingw_file.stat().st_size
+        print(f"Downloaded file size: {actual_size} bytes")
+        
+        if actual_size != total_size:
+            raise Exception(f"Download incomplete. Expected {total_size} bytes but got {actual_size} bytes")
+        
         print("MinGW downloaded successfully")
         
         # Extract MinGW using 7-Zip
         seven_zip = r"C:\Program Files\7-Zip\7z.exe"
-        subprocess.run([seven_zip, "x", str(mingw_file), f"-o{str(cache_dir)}", "-y"], check=True)
+        print(f"Extracting {mingw_file} to {cache_dir}")
+        result = subprocess.run([seven_zip, "x", str(mingw_file), f"-o{str(cache_dir)}", "-y"], 
+                              capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            print("7-Zip stdout:", result.stdout)
+            print("7-Zip stderr:", result.stderr)
+            raise Exception("7-Zip extraction failed")
+            
         print("MinGW extracted successfully")
         
     - name: Build with Nuitka
