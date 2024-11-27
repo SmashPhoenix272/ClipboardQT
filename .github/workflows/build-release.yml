@@ -24,7 +24,8 @@ jobs:
         update: true
         install: |
           mingw-w64-x86_64-gcc
-          yes
+          msys2-keyring
+          coreutils
         
     - name: Install dependencies
       run: |
@@ -38,7 +39,7 @@ jobs:
       shell: cmd
       run: |
         set PATH=C:\msys64\usr\bin;C:\msys64\mingw64\bin;%PATH%
-        yes | python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
+        echo y | python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
         
     - name: Create Release
       id: create_release
