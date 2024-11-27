@@ -24,15 +24,37 @@ jobs:
         pip install nuitka
         pip install zstandard  # Required for Nuitka
         pip install ordered-set  # Required for Nuitka
+        pip install requests  # For downloading MinGW
+        pip install py7zr  # For extracting MinGW
         
-    - name: Create Auto-Response Script
+    - name: Setup MinGW
+      shell: python
       run: |
-        echo "import sys; print('yes'); sys.stdout.flush()" > auto_response.py
+        import os
+        import requests
+        import py7zr
+        from pathlib import Path
+        
+        # Create Nuitka cache directory
+        cache_dir = Path(os.environ['LOCALAPPDATA']) / 'Nuitka' / 'Nuitka' / 'Cache' / 'downloads' / 'gcc' / 'x86_64' / '14.2.0posix-19.1.1-12.0.0-msvcrt-r2'
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Download MinGW
+        url = "https://github.com/Nuitka/Nuitka-MinGW64-Builds/releases/download/14.2.0posix-19.1.1-12.0.0-msvcrt-r2/gcc-14.2.0posix-19.1.1-12.0.0-msvcrt-r2.7z"
+        response = requests.get(url)
+        mingw_file = cache_dir / "gcc.7z"
+        mingw_file.write_bytes(response.content)
+        print("MinGW downloaded successfully")
+        
+        # Extract MinGW
+        with py7zr.SevenZipFile(mingw_file, mode='r') as z:
+            z.extractall(cache_dir)
+        print("MinGW extracted successfully")
         
     - name: Build with Nuitka
       shell: powershell
       run: |
-        python auto_response.py | python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
+        python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
         
     - name: Create Release
       id: create_release
