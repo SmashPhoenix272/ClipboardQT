@@ -1,5 +1,5 @@
 """
-ClipboardQT v1.0
+ClipboardQT v1.1
 Created with Windsurf - The World's First Agentic IDE
 """
 
@@ -10,9 +10,10 @@ import win32con
 import ctypes
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QTextEdit, 
-    QLabel, QWidget, QSpacerItem, QSizePolicy, QPushButton, QHBoxLayout
+    QLabel, QWidget, QSpacerItem, QSizePolicy, QPushButton, QHBoxLayout,
+    QStyle, QStyleFactory
 )
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, QPoint
 from PyQt5.QtGui import QPalette, QColor, QFont, QIcon
 from clipboard_translator import ClipboardTranslator
 
@@ -71,85 +72,30 @@ class ClipboardTranslatorApp(QMainWindow):
         super().__init__()
         self.setWindowTitle("ClipboardQT")
         self.setGeometry(100, 100, 800, 600)
-        self.setWindowFlags(Qt.FramelessWindowHint)  # Remove window frame
-        self.setWindowIcon(QIcon("icon.ico"))  # Set both window and taskbar icon
-        self.setup_theme()
-
-        # Add custom title bar
-        title_bar = QWidget()
-        title_layout = QHBoxLayout()
-        title_layout.setContentsMargins(10, 5, 10, 5)
-        title_bar.setLayout(title_layout)
-        title_bar.setStyleSheet("""
-            QWidget {
-                background-color: #1e1e1e;
-            }
-        """)
-        title_bar.setFixedHeight(35)
-
-        # Title label
-        title_label = QLabel("ClipboardQT")
-        title_label.setStyleSheet("""
-            QLabel {
-                color: #ffffff;
-                font-size: 12pt;
-                font-weight: bold;
-            }
-        """)
-        title_layout.addWidget(title_label)
-
-        # Window controls
-        btn_style = """
-            QPushButton {
-                background-color: transparent;
-                border: none;
-                color: #ffffff;
-                font-family: Segoe UI;
-                font-size: 14px;
-                padding: 5px 10px;
-                min-width: 40px;
-            }
-            QPushButton:hover {
-                background-color: #404040;
-            }
-        """
-
-        minimize_btn = QPushButton("─")
-        minimize_btn.setStyleSheet(btn_style)
-        minimize_btn.clicked.connect(self.showMinimized)
-
-        maximize_btn = QPushButton("□")
-        maximize_btn.setStyleSheet(btn_style)
-        maximize_btn.clicked.connect(self.toggle_maximize)
+        self.setMinimumSize(400, 300)  # Set minimum window size
+        self.setWindowIcon(QIcon("icon.ico"))
         
-        close_btn = QPushButton("✕")
-        close_btn.setStyleSheet(btn_style + """
-            QPushButton:hover {
-                background-color: #c42b1c;
-            }
-        """)
-        close_btn.clicked.connect(self.close)
-
-        title_layout.addStretch()
-        title_layout.addWidget(minimize_btn)
-        title_layout.addWidget(maximize_btn)
-        title_layout.addWidget(close_btn)
+        # Create window first to get handle
+        self.create()
+        
+        # Enable dark mode for the title bar
+        if self.winId() is not None:
+            set_window_dark_mode(int(self.winId()))
+        
+        self.setup_theme()
 
         # Central widget and layout
         central_widget = QWidget()
         main_layout = QVBoxLayout()
-        main_layout.setSpacing(0)
-        main_layout.setContentsMargins(1, 1, 1, 1)
+        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(10, 10, 10, 10)
         central_widget.setLayout(main_layout)
-
-        # Add title bar and content
-        main_layout.addWidget(title_bar)
 
         # Content widget
         content_widget = QWidget()
         content_layout = QVBoxLayout()
         content_layout.setSpacing(10)
-        content_layout.setContentsMargins(20, 20, 20, 20)
+        content_layout.setContentsMargins(0, 0, 0, 0)
         content_widget.setLayout(content_layout)
 
         # Original text label and text area
@@ -159,7 +105,8 @@ class ClipboardTranslatorApp(QMainWindow):
         
         self.original_text = QTextEdit()
         self.original_text.setFont(QFont("Segoe UI", 11))
-        self.original_text.setMinimumHeight(200)
+        self.original_text.setMinimumHeight(100)  # Reduced minimum height
+        self.original_text.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.original_text.textChanged.connect(self.on_text_changed)
         content_layout.addWidget(self.original_text)
 
@@ -173,9 +120,14 @@ class ClipboardTranslatorApp(QMainWindow):
         
         self.translated_text = QTextEdit()
         self.translated_text.setFont(QFont("Segoe UI", 11))
-        self.translated_text.setMinimumHeight(200)
+        self.translated_text.setMinimumHeight(100)  # Reduced minimum height
+        self.translated_text.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.translated_text.setReadOnly(True)
         content_layout.addWidget(self.translated_text)
+
+        # Add the content widget to main layout
+        main_layout.addWidget(content_widget)
+        self.setCentralWidget(central_widget)
 
         # Translator and clipboard setup
         self.translator = ClipboardTranslator("http://192.168.50.95:2210")
@@ -185,9 +137,6 @@ class ClipboardTranslatorApp(QMainWindow):
         self.clipboard_timer = QTimer(self)
         self.clipboard_timer.timeout.connect(self.check_clipboard)
         self.clipboard_timer.start(1000)  # Check every second
-
-        main_layout.addWidget(content_widget)
-        self.setCentralWidget(central_widget)
 
     def setup_theme(self):
         """Set up dark theme colors"""
@@ -208,7 +157,6 @@ class ClipboardTranslatorApp(QMainWindow):
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #2b2b2b;
-                border: 1px solid #444444;
             }
             QTextEdit {
                 background-color: #333333;
@@ -265,22 +213,6 @@ class ClipboardTranslatorApp(QMainWindow):
             }
         """)
 
-    def toggle_maximize(self):
-        if self.isMaximized():
-            self.showNormal()
-        else:
-            self.showMaximized()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.dragPos = event.globalPos()
-
-    def mouseMoveEvent(self, event):
-        if hasattr(self, 'dragPos'):
-            if event.buttons() == Qt.LeftButton:
-                self.move(self.pos() + event.globalPos() - self.dragPos)
-                self.dragPos = event.globalPos()
-
     def check_clipboard(self):
         """Monitor clipboard for changes"""
         current_clipboard = pyperclip.paste()
@@ -297,7 +229,16 @@ class ClipboardTranslatorApp(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
+    
+    # Enable High DPI scaling
+    app.setAttribute(Qt.AA_EnableHighDpiScaling)
+    app.setAttribute(Qt.AA_UseHighDpiPixmaps)
+    
+    # Set fusion style for better cross-platform look
+    app.setStyle(QStyleFactory.create('Fusion'))
+    
     translator_app = ClipboardTranslatorApp()
+    
     translator_app.show()
     sys.exit(app.exec_())
 
