@@ -17,21 +17,18 @@ jobs:
       with:
         python-version: '3.11'
         
-    - name: Install MinGW
-      shell: powershell
-      run: |
-        choco install mingw -y
-        echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install nuitka
         pip install zstandard  # Required for Nuitka
+        pip install ordered-set  # Required for Nuitka
         
     - name: Build with Nuitka
       shell: powershell
+      env:
+        NUITKA_DOWNLOAD_CONFIRMATION: "yes"
       run: |
         python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
         
