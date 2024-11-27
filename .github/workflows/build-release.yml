@@ -22,7 +22,9 @@ jobs:
       with:
         msystem: MINGW64
         update: true
-        install: mingw-w64-x86_64-gcc
+        install: |
+          mingw-w64-x86_64-gcc
+          yes
         
     - name: Install dependencies
       run: |
@@ -33,10 +35,10 @@ jobs:
         pip install ordered-set  # Required for Nuitka
         
     - name: Build with Nuitka
-      shell: powershell
+      shell: cmd
       run: |
-        $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;$env:PATH"
-        python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
+        set PATH=C:\msys64\usr\bin;C:\msys64\mingw64\bin;%PATH%
+        yes | python -m nuitka --windows-icon-from-ico=icon.ico --mingw64 --standalone --onefile --enable-plugin=pyqt5 --windows-console-mode=disable ClipboardQT.py
         
     - name: Create Release
       id: create_release
