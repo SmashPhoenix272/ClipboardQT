@@ -5,3 +5,5 @@ ClipboardQT.onefile-build/
 ClipboardQT.dist/
 ClipboardQT.build/
 .pytest_cache/
+test_clipboard_qt.py
+QTEngineServer/
